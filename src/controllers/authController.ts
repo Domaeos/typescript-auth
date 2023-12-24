@@ -7,8 +7,7 @@ const registerUser = async (req: Request, res: Response) => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-        res.status(400).json({ message: "The user already exists" })
-        // console.log("User already exists")
+        res.status(400).json({ message: "The email already exists" })
         return;
     }
 
@@ -19,11 +18,16 @@ const registerUser = async (req: Request, res: Response) => {
     })
 
     if (user) {
-        generateToken(res, user._id);
+        generateToken(res, {
+            userId: user._id,
+            userEmail: user.email,
+            roles: user.roles,
+        });
         res.status(201).json({
             id: user._id,
             name: user.name,
             email: user.email,
+            roles: user.roles,
         });
     } else {
         res.status(400).json({ message: "An error occurred in creating the user" });
@@ -36,20 +40,25 @@ const authenticateUser = async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.comparePassword(password))) {
-        generateToken(res, user._id);
+        generateToken(res, {
+            userId: user._id,
+            userEmail: user.email,
+            roles: user.roles,
+        });
         res.status(201).json({
             id: user._id,
             name: user.name,
             email: user.email,
+            roles: user.roles,
         });
     } else {
-        res.status(401).json({ message: "User not found / password incorrect" });
+        res.status(409).json({ message: "User not found / password incorrect" });
     }
 };
 
 const logoutUser = (req: Request, res: Response) => {
     clearToken(res);
-    res.status(200).json({ message: "User logged out" });
+    res.status(200).json({ message: "Successfully logged out" });
 };
 
 export { registerUser, authenticateUser, logoutUser };

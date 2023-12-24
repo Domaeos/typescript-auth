@@ -11,7 +11,7 @@ import helmet from "helmet";
 
 interface UserBasicInfo {
     _id: string;
-    name: string;
+    // name: string;
     email: string;
     roles: string[];
 }

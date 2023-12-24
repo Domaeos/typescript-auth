@@ -4,34 +4,45 @@ import User from "../models/User";
 import asyncHandler from "express-async-handler";
 import { AuthenticationError } from "./errorMiddleware";
 
-const authenticate = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+const authenticate = (req: Request, res: Response, next: NextFunction) => {
     try {
-      let token = req.cookies.jwt;
+        let token = req.cookies.jwt;
 
-      if (!token) {
-        throw new AuthenticationError("Token not found");
-      }
+        if (!token) {
+            throw new AuthenticationError("Token not found");
+        }
 
-      const jwtSecret = process.env.JWT_SECRET || "";
-      const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+        const jwtSecret = process.env.JWT_SECRET || "";
+        const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
-      if (!decoded || !decoded.userId) {
-        throw new AuthenticationError("UserId not found");
-      }
+        if (!decoded || !decoded.userId || !decoded.userEmail) {
+            throw new AuthenticationError("User not found");
+        }
 
-      const user = await User.findById(decoded.userId, "_id name email");
+        const { userId, userEmail, roles } = decoded;
 
-      if (!user) {
-        throw new AuthenticationError("User not found");
-      }
-
-      req.user = user;
-      next();
+        req.user = { _id: userId, email: userEmail, roles };
+        next();
     } catch (e) {
-      throw new AuthenticationError("Invalid token");
+        throw new AuthenticationError("Invalid token");
     }
-  }
-);
+}
 
-export { authenticate };
+const authorize = (allowedRoles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+      const userRoles = req.user?.roles;
+      console.log(userRoles)
+      console.log(allowedRoles)
+  
+      if (
+        !userRoles ||
+        !userRoles.some((role: string) => allowedRoles.includes(role))
+      ) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+  
+      next();
+    };
+  };
+
+export { authenticate, authorize };

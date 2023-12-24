@@ -10,6 +10,8 @@ const errorHandler = (
 
     if (err instanceof AuthenticationError) {
         res.status(401).json({ message: "Unauthorized: " + err.message });
+    } else if (err instanceof BadRequestError) {
+        res.status(400).json({ message: "Bad request: " + err.message });
     } else {
         res.status(500).json({ message: "Internal Server Error" });
     }
@@ -22,4 +24,11 @@ class AuthenticationError extends Error {
     }
 }
 
-export { errorHandler, AuthenticationError };
+class BadRequestError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "BadRequestError";
+    }
+}
+
+export { errorHandler, AuthenticationError, BadRequestError };
