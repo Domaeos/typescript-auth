@@ -13,6 +13,7 @@ interface UserBasicInfo {
     _id: string;
     name: string;
     email: string;
+    roles: string[];
 }
 
 // tells typescript the global variable exists elsewhere
